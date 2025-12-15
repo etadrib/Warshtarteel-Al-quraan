@@ -1,0 +1,7 @@
+{
+  "name": "WarshTarteel",
+  "description": "AI-powered Quran recitation assistant specializing in Warsh narration. Features real-time correction, memorization tracking, and progress analytics.",
+  "requestFramePermissions": [
+    "microphone"
+  ]
+}
