@@ -1,16 +1,21 @@
+
 export interface Surah {
   id: number;
   name: string;
   transliteration: string;
   english: string;
-  verses: Verse[];
+  verseCount: number;
+  startPage: number;
+  endPage: number;
 }
 
 export interface Verse {
-  id: number;
+  id: number; // Verse number within Surah
+  surahId: number;
   text: string; // Arabic text
   translation: string;
   page: number; // Mushaf page number
+  juz: number;
 }
 
 export interface UserProgress {
@@ -22,8 +27,9 @@ export interface UserProgress {
 
 export enum AppMode {
   DASHBOARD = 'DASHBOARD',
-  RECITATION = 'RECITATION',
-  MEMORIZATION = 'MEMORIZATION',
+  TAJWEED_PRACTICE = 'TAJWEED_PRACTICE', // Quran visible, focus on rules
+  RECITATION_TEST = 'RECITATION_TEST', // Quran hidden/toggle, focus on memory
+  MEMORIZATION = 'MEMORIZATION', // Legacy/Flashcard mode
   SETTINGS = 'SETTINGS'
 }
 

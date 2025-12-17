@@ -1,8 +1,8 @@
-import React, { useState } from 'react';
-import { Surah } from '../types';
-import { MOCK_SURAHS } from '../constants';
+import React, { useState, useMemo } from 'react';
+import { Surah, AppMode } from '../types';
+import { SURAH_LIST, QURAN_CONTENT } from '../constants';
 import { LiveTutor } from './LiveTutor';
-import { ArrowLeft, Eye, EyeOff, RefreshCw } from 'lucide-react';
+import { ArrowLeft, Eye, EyeOff } from 'lucide-react';
 
 interface MemorizationModeProps {
   onBack: () => void;
@@ -10,11 +10,20 @@ interface MemorizationModeProps {
 }
 
 export const MemorizationMode: React.FC<MemorizationModeProps> = ({ onBack, apiKey }) => {
-  const [activeSurah, setActiveSurah] = useState<Surah>(MOCK_SURAHS[1]); // Default to shorter surah for memory
+  // Default to a surah that has content (e.g. Al-Ikhlas id 112), or the first one
+  const [activeSurah, setActiveSurah] = useState<Surah>(
+    SURAH_LIST.find(s => s.id === 112) || SURAH_LIST[0]
+  ); 
   const [revealedVerses, setRevealedVerses] = useState<number[]>([]);
   const [transcript, setTranscript] = useState('');
   const [aiFeedback, setAiFeedback] = useState('Recite to reveal verses...');
   const [isAllRevealed, setIsAllRevealed] = useState(false);
+
+  const activeVerses = useMemo(() => {
+    return QURAN_CONTENT
+      .filter(v => v.surahId === activeSurah.id)
+      .sort((a, b) => a.id - b.id);
+  }, [activeSurah.id]);
 
   const toggleReveal = (id: number) => {
     setRevealedVerses(prev => 
@@ -26,7 +35,7 @@ export const MemorizationMode: React.FC<MemorizationModeProps> = ({ onBack, apiK
     if (isAllRevealed) {
       setRevealedVerses([]);
     } else {
-      setRevealedVerses(activeSurah.verses.map(v => v.id));
+      setRevealedVerses(activeVerses.map(v => v.id));
     }
     setIsAllRevealed(!isAllRevealed);
   };
@@ -53,7 +62,7 @@ export const MemorizationMode: React.FC<MemorizationModeProps> = ({ onBack, apiK
       <div className="flex-1 overflow-y-auto p-4 md:p-8 pb-40">
         <div className="max-w-2xl mx-auto space-y-6">
             <div className="flex justify-center gap-2 mb-6 overflow-x-auto pb-2 no-scrollbar">
-                {MOCK_SURAHS.map(s => (
+                {SURAH_LIST.map(s => (
                     <button
                         key={s.id}
                         onClick={() => { setActiveSurah(s); setRevealedVerses([]); setIsAllRevealed(false); }}
@@ -71,7 +80,7 @@ export const MemorizationMode: React.FC<MemorizationModeProps> = ({ onBack, apiK
                 </div>
 
                 <div className="space-y-10 w-full z-10">
-                     {activeSurah.verses.map((verse) => {
+                     {activeVerses.map((verse) => {
                          const isRevealed = revealedVerses.includes(verse.id);
                          return (
                             <div 
@@ -97,6 +106,9 @@ export const MemorizationMode: React.FC<MemorizationModeProps> = ({ onBack, apiK
                             </div>
                          );
                      })}
+                     {activeVerses.length === 0 && (
+                       <div className="text-gray-400 text-center">No verses available for this Surah in demo.</div>
+                     )}
                 </div>
             </div>
         </div>
@@ -112,14 +124,13 @@ export const MemorizationMode: React.FC<MemorizationModeProps> = ({ onBack, apiK
                 onFeedbackUpdate={(fb) => {
                     setAiFeedback(fb);
                     // Simple logic to simulate auto-reveal based on positive feedback
-                    // In a real app, we'd match the transcript against verse text
                     if (fb.toLowerCase().includes('correct') || fb.toLowerCase().includes('mumtaz')) {
                         // reveal next unrevealed verse
-                        const nextId = activeSurah.verses.find(v => !revealedVerses.includes(v.id))?.id;
+                        const nextId = activeVerses.find(v => !revealedVerses.includes(v.id))?.id;
                         if (nextId) setRevealedVerses(prev => [...prev, nextId]);
                     }
                 }}
-                mode="MEMORIZATION"
+                mode={AppMode.MEMORIZATION}
             />
             <div className="mt-2 text-center">
                 <p className="text-emerald-700 text-sm font-medium animate-pulse">{aiFeedback}</p>
